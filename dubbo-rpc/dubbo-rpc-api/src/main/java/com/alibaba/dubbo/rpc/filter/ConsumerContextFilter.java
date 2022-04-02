@@ -28,6 +28,7 @@ import com.alibaba.dubbo.rpc.RpcException;
 import com.alibaba.dubbo.rpc.RpcInvocation;
 
 /**
+ * 它是怎么将客户端设置的隐式参数传递给服务端,载体就是Invocation对象，在客户端调用Invoker.invoke方法时候，会去取当前状态记录器RpcContext中的attachments属性，然后设置到RpcInvocation对象中，在RpcInvocation传递到provider的时候会通过另外一个过滤器ContextFilter将RpcInvocation对象重新设置回RpcContext中供服务端逻辑重新获取隐式参数。这就是为什么RpcContext只能记录一次请求的状态信息，因为在第二次调用的时候参数已经被新的RpcInvocation覆盖掉，第一次的请求信息对于第二次执行是不可见的。
  * ConsumerContextInvokerFilter
  *
  * 服务消费者的 ContextFilter
@@ -37,7 +38,7 @@ public class ConsumerContextFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-        // 设置 RpcContext 对象
+        // 设置 RpcContext 对象 在当前的RpcContext中记录本地调用的一次状态信息
         RpcContext.getContext()
                 .setInvoker(invoker)
                 .setInvocation(invocation)

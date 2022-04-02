@@ -28,6 +28,7 @@ import com.alibaba.dubbo.rpc.RpcResult;
 /**
  * EchoInvokerFilter
  *
+ * 回响测试主要用来检测服务是否正常（网络状态），单纯的检测网络情况的话其实不需要执行真正的业务逻辑的，所以通过Filter验证一下即可.
  * 回声过滤器
  */
 @Activate(group = Constants.PROVIDER, order = -110000)

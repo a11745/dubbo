@@ -29,6 +29,7 @@ import com.alibaba.dubbo.rpc.RpcStatus;
 /**
  * LimitInvokerFilter
  *
+ * 限制同一个客户端对于一个服务端方法的并发调用量。(客户端限流)
  * 每服务消费者每服务每方法最大并发调用数限制的过滤器实现类
  */
 @Activate(group = Constants.CONSUMER, value = Constants.ACTIVES_KEY)
@@ -51,13 +52,15 @@ public class ActiveLimitFilter implements Filter {
             // 超过最大可并行执行请求数，等待
             if (active >= max) {
                 synchronized (count) { // 通过锁，有且仅有一个在等待。
-                    // 循环，等待可并行执行请求数
+                    // 循环，等待可并行执行请求数 这个while循环是必要的，因为在一次wait结束后，可能线程调用已经结束了，腾出来consumer的空间
                     while ((active = count.getActive()) >= max) {
                         // 等待，直到超时，或者被唤醒
                         try {
                             count.wait(remain);
                         } catch (InterruptedException e) {
                         }
+                        //如果wait方法被中断的话，remain这时候有可能大于0
+                        //如果其中一个线程运行结束自后调用notify方法的话，也有可能remain大于0
                         // 判断是否没有剩余时长了，抛出 RpcException 异常
                         long elapsed = System.currentTimeMillis() - start; // 本地等待时长
                         remain = timeout - elapsed;
@@ -73,6 +76,7 @@ public class ActiveLimitFilter implements Filter {
             }
         }
         try {
+            //调用开始和结束后增减并发数量
             long begin = System.currentTimeMillis();
             // 调用开始的计数
             RpcStatus.beginCount(url, methodName);
@@ -88,7 +92,7 @@ public class ActiveLimitFilter implements Filter {
                 throw t;
             }
         } finally {
-            // 唤醒等待的相同服务的相同方法的请求
+            // 调用完成后要通知正在等待执行的队列 唤醒等待的相同服务的相同方法的请求
             if (max > 0) {
                 synchronized (count) {
                     count.notify();

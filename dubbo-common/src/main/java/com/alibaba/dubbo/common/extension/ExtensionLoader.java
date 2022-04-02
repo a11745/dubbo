@@ -276,7 +276,7 @@ public class ExtensionLoader<T> {
 
     /**
      * This is equivalent to {@code getActivateExtension(url, url.getParameter(key).split(","), null)}
-     *
+     * 将key在url中对应的配置值切换成字符串信息数组
      * 获得符合自动激活条件的拓展对象数组
      *
      * @param url   url
@@ -307,6 +307,7 @@ public class ExtensionLoader<T> {
      */
     public List<T> getActivateExtension(URL url, String[] values, String group) {
         List<T> exts = new ArrayList<T>();
+        //所有用户自己配置的filter信息（有些Filter是默认激活的，有些是配置激活的，这里的names就指的配置激活的filter信息）
         List<String> names = values == null ? new ArrayList<String>(0) : Arrays.asList(values);
         // 处理自动激活的拓展对象们
         // 判断不存在配置 `"-name"` 。例如，<dubbo:service filter="-default" /> ，代表移除所有默认过滤器。
@@ -315,6 +316,7 @@ public class ExtensionLoader<T> {
             getExtensionClasses();
             // 循环
             for (Map.Entry<String, Activate> entry : cachedActivates.entrySet()) {
+                //name指的是SPI读取的配置文件的key
                 String name = entry.getKey();
                 Activate activate = entry.getValue();
                 if (isMatchGroup(group, activate.group())) { // 匹配分组
@@ -380,7 +382,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 是否激活，通过 Dubbo URL 中是否存在参数名为 `@Activate.value` ，并且参数值非空。
-     *
+     * 如果用户的配置信息（url中体现）中有可以激活的配置key并且数据不为0,false,null，N/A，也就是说有正常的使用
      * @param activate 自动激活注解
      * @param url Dubbo URL
      * @return 是否

@@ -35,17 +35,6 @@ import java.lang.reflect.Method;
 
 /**
  * ExceptionInvokerFilter
- * <p>
- * Functions:
- * <ol>
- * <li>unexpected exception will be logged in ERROR level on provider side. Unexpected exception are unchecked
- * exception not declared on the interface</li>
- * <li>Wrap the exception not introduced in API package into RuntimeException. Framework will serialize the outer exception but stringnize its cause in order to avoid of possible serialization problem on client side</li>
- * </ol>
- */
-
-/**
- * ExceptionInvokerFilter
  *
  * 异常过滤器
  *
@@ -58,8 +47,14 @@ import java.lang.reflect.Method;
  * RPC对于第一层异常会直接序列化传输(Cause异常会String化)，避免异常在Client出不能反序列化问题。
  * </ol>
  *
- * @author william.liangf
- * @author ding.lid
+ * Dubbo 对于异常的处理规则：
+ *
+ * 如果是checked异常则直接抛出
+ * 如果是unchecked异常但是在接口上有声明，也会直接抛出
+ * 如果异常类和接口类在同一jar包里，直接抛出
+ * 如果是JDK自带的异常，直接抛出
+ * 如果是Dubbo的异常，直接抛出
+ * 其余的都包装成RuntimeException然后抛出（避免异常在Client出不能反序列化问题）
  *
  */
 @Activate(group = Constants.PROVIDER)
@@ -91,7 +86,7 @@ public class ExceptionFilter implements Filter {
                         return result;
                     }
                     // directly throw if the exception appears in the signature
-                    // 在方法签名上有声明，直接抛出
+                    // 运行时异常，并且在方法签名上有声明，直接抛出
                     try {
                         Method method = invoker.getInterface().getMethod(invocation.getMethodName(), invocation.getParameterTypes());
                         Class<?>[] exceptionClassses = method.getExceptionTypes();

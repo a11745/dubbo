@@ -25,7 +25,7 @@ import java.util.concurrent.Semaphore;
 
 /**
  * ThreadLimitInvokerFilter
- *
+ * 服务端接口限制限流的具体执行逻辑，因为服务端不需要考虑重试等待逻辑，一旦当前执行的线程数量大于指定数量，就直接返回失败了，所以实现逻辑相对于ActiveLimitFilter倒是简便了不少。
  * 服务提供者每服务每方法最大可并行执行请求数的过滤器实现类
  */
 @Activate(group = Constants.PROVIDER, value = Constants.EXECUTES_KEY)

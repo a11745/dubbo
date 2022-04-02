@@ -42,6 +42,7 @@ public class ContextFilter implements Filter {
         // 创建新的 `attachments` 集合，清理公用的隐式参数
         Map<String, String> attachments = invocation.getAttachments();
         if (attachments != null) {
+            //隐式参数重剔除一些核心消息
             attachments = new HashMap<String, String>(attachments);
             attachments.remove(Constants.PATH_KEY);
             attachments.remove(Constants.GROUP_KEY);
@@ -52,7 +53,7 @@ public class ContextFilter implements Filter {
             attachments.remove(Constants.ASYNC_KEY); // Remove async property to avoid being passed to the following invoke chain.
                                                      // 清空消费端的异步参数
         }
-        // 设置 RpcContext 对象
+        // 设置 RpcContext 对象 又重新将invocation和attachments信息设置到RpcContext，这里设置以后provider的代码就可以获取到consumer端传递的一些隐式参数了
         RpcContext.getContext()
                 .setInvoker(invoker)
                 .setInvocation(invocation)

@@ -45,6 +45,16 @@ import java.util.regex.Pattern;
  *
  * 拓展加载器
  *
+ * Dubbo API可以分为Class缓存、实例缓存。这两种缓存又能根据扩展类的种类分为普通扩展类、包装扩展类（Wrapper类）、自适应扩展类（Adaptive类）。
+ * Class缓存：Dubbo SPI 获取扩展类的时候，会先从缓存中读取。如果缓存中不存在，则加载配置文件，根据配置把Class缓存到内存中，并不会直接全部初始化。
+ * 实例化缓存：Dubbo SPI在实例化Class后，会将实例的对象缓存起来，每次在获取的时候，先去缓存中读取，如果缓存中读取不到，则重新加载并缓存。
+ * 普通扩展类：最基础的，配置在SPI配置文件中的扩展类实现。
+ * 包装扩展类：Wrapper没有具体的实现，只是做了通用逻辑的抽象，并且需要在构造方法中传入一个具体的扩展接口的实现。属于Dubbo的自动包装特性。
+ * 自适应扩展类：一个接口可能会有多重实现类，具体使用哪个实现类，可以在运行代码的时候，通过传入URL中的某些参数动态来确定。属于扩展点的自适应特性。
+ * 其他缓存：如扩展加载器缓存、扩展名缓存等。
+ *
+ * 扩展类一共包含四种特性：自动包装、自动加载、自适应和自动激活.
+ *
  * Dubbo使用的扩展点获取。<p>
  * <ul>
  *      <li>自动注入关联扩展点。</li>
@@ -79,13 +89,13 @@ public class ExtensionLoader<T> {
 
     /**
      * 拓展加载器集合
-     *
+     * 扩展类与对应的扩展类加载器缓存
      * key：拓展接口
      */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<Class<?>, ExtensionLoader<?>>();
     /**
      * 拓展实现类集合
-     *
+     * 扩展类与类初始化后的实例
      * key：拓展实现类
      * value：拓展对象。
      *
@@ -111,7 +121,7 @@ public class ExtensionLoader<T> {
     private final ExtensionFactory objectFactory;
     /**
      * 缓存的拓展名与拓展类的映射。
-     *
+     * 扩展类与扩展名缓存
      * 和 {@link #cachedClasses} 的 KV 对调。
      *
      * 通过 {@link #loadExtensionClasses} 加载
@@ -119,7 +129,7 @@ public class ExtensionLoader<T> {
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<Class<?>, String>();
     /**
      * 缓存的拓展实现类集合。
-     *
+     * 普通扩展类缓存，不包括自适应扩展类和Wrapper类
      * 不包含如下两种类型：
      *  1. 自适应拓展实现类。例如 AdaptiveExtensionFactory
      *  2. 带唯一参数为拓展接口的构造方法的实现类，或者说拓展 Wrapper 实现类。例如，ProtocolFilterWrapper 。
@@ -131,7 +141,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 拓展名与 @Activate 的映射
-     *
+     * 扩展名与@Activate的缓存
      * 例如，AccessLogFilter。
      *
      * 用于 {@link #getActivateExtension(URL, String)}
@@ -139,7 +149,7 @@ public class ExtensionLoader<T> {
     private final Map<String, Activate> cachedActivates = new ConcurrentHashMap<String, Activate>();
     /**
      * 缓存的拓展对象集合
-     *
+     * 扩展名与扩展对象缓存
      * key：拓展名
      * value：拓展对象
      *
@@ -152,11 +162,12 @@ public class ExtensionLoader<T> {
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<String, Holder<Object>>();
     /**
      * 缓存的自适应( Adaptive )拓展对象
+     * 实例后的自适应(Adaptive)扩展对象，只能同时存在一个
      */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<Object>();
     /**
      * 缓存的自适应拓展对象的类
-     *
+     * 自适应扩展类缓存
      * {@link #getAdaptiveExtensionClass()}
      */
     private volatile Class<?> cachedAdaptiveClass = null;
@@ -175,7 +186,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 拓展 Wrapper 实现类集合
-     *
+     *  Wrapper类缓存
      * 带唯一参数为拓展接口的构造方法的实现类
      *
      * 通过 {@link #loadExtensionClasses} 加载
@@ -210,7 +221,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 根据拓展点的接口，获得拓展加载器
-     *
+     * 为接口new一个ExtensionLoader 然后缓存起来
      * @param type 接口
      * @param <T> 泛型
      * @return 加载器
@@ -298,7 +309,7 @@ public class ExtensionLoader<T> {
      * Get activate extensions.
      *
      * 获得符合自动激活条件的拓展对象数组
-     *
+     * 获取一个扩展装饰类的对象，如果没有@Activate注解，就动态创建一个装饰类，如Protocol$Activate对象
      * @param url    url
      * @param values extension point names
      * @param group  group
@@ -456,7 +467,7 @@ public class ExtensionLoader<T> {
      */
     /**
      * 返回指定名字的扩展对象。如果指定名字的扩展不存在，则抛异常 {@link IllegalStateException}.
-     *
+     * 获取一个对象
      * @param name 拓展名
      * @return 拓展对象
      */

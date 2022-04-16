@@ -31,7 +31,7 @@ import java.util.Map;
 
 /**
  * ContextInvokerFilter
- *
+ * 记录每个请求的调用上下文
  * 服务提供者的 ContextFilter
  */
 @Activate(group = Constants.PROVIDER, order = -10000)

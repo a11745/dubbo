@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Main. (API, Static, ThreadSafe)
- *
+ * Dubbo启动入口
  * 启动程序
  */
 public class Main {

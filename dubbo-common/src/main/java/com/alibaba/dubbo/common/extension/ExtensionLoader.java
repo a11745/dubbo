@@ -107,13 +107,15 @@ public class ExtensionLoader<T> {
     // ============================== 对象属性 ==============================
 
     /**
+     * 构造器参数 初始化时要得到的接口名
      * 拓展接口。
      * 例如，Protocol
      */
     private final Class<?> type;
     /**
      * 对象工厂
-     *
+     * 构造器参数 初始化时AdaptiveExtensionFactory[SpiExtensionFactory,SpringExtensionFactory]
+     * 为dubbo的ioc提供所有对象
      * 用于调用 {@link #injectExtension(Object)} 方法，向拓展对象注入依赖的属性。
      *
      * 例如，StubProxyFactoryWrapper 中有 `Protocol protocol` 属性。
@@ -241,8 +243,10 @@ public class ExtensionLoader<T> {
         }
 
         // 获得接口对应的拓展点加载器
+        //先尝试从本地缓冲中获取
         ExtensionLoader<T> loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         if (loader == null) {
+            //如果缓存中不存在，则new一个ExtensionLoader并加入缓存
             EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<T>(type));
             loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         }
@@ -730,6 +734,7 @@ public class ExtensionLoader<T> {
             Set<Class<?>> wrapperClasses = cachedWrapperClasses;
             if (wrapperClasses != null && !wrapperClasses.isEmpty()) {
                 for (Class<?> wrapperClass : wrapperClasses) {
+                    //  wrapperClass.getConstructor(type).newInstance dubbo的AOP的简单设计
                     instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                 }
             }
@@ -742,7 +747,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 注入依赖的属性
-     *
+     * IOC控制反转，动态注入
      * @param instance 拓展对象
      * @return 拓展对象
      */
@@ -1011,11 +1016,11 @@ public class ExtensionLoader<T> {
 
     /**
      * 自动生成自适应拓展的代码实现，并编译后返回该类。
-     *
+     * 动态编译
      * @return 类
      */
     private Class<?> createAdaptiveExtensionClass() {
-        // 自动生成自适应拓展的代码实现的字符串
+        // 自动生成自适应拓展的代码实现的字符串 通过模板生成代码
         String code = createAdaptiveExtensionClassCode();
         // 编译代码，并返回该类
         ClassLoader classLoader = findClassLoader();

@@ -24,7 +24,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 /**
  * DubboNamespaceHandler
- *
+ * dubbo命名空间
  * @export
  */
 public class DubboNamespaceHandler extends NamespaceHandlerSupport {

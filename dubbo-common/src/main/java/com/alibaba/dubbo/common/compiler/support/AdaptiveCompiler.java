@@ -23,7 +23,7 @@ import com.alibaba.dubbo.common.extension.ExtensionLoader;
 
 /**
  * AdaptiveCompiler. (SPI, Singleton, ThreadSafe)
- *
+ * 动态编译
  * 自适应 Compiler 实现类
  */
 @Adaptive

@@ -31,8 +31,8 @@ import java.lang.annotation.Target;
  *
  * `@Adaptive` 可添加类或方法上。这两种方式表现不同：
  *
- * 1. 当在 类 上时，直接使用被注解的类。也因此，一个拓展，只允许最多注解一个类，否则会存在多个会是冲突。
- * 2. 当在方法上时，使用 {@link ExtensionLoader#createAdaptiveExtensionClass()} 方法，创建自适应( Adaptive )拓展类。
+ * 1. 当在 类 上时，直接使用被注解的类。也因此，一个拓展，只允许最多注解一个类，否则会存在多个会是冲突。代表人工实现编码，即实现了一个装饰类（设计模式中的装饰模式），例如：ExtensionFactory(AdaptiveExtensionFactory)
+ * 2. 当在方法上时，使用 {@link ExtensionLoader#createAdaptiveExtensionClass()} 方法，创建自适应( Adaptive )拓展类。 代表自动生成和编译一个动态的Adaptive类 例如Protocol$Adaptive
  *
  * 如上逻辑，处理的入口方法为 {@link ExtensionLoader#getAdaptiveExtensionClass()}
  *

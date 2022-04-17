@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 /**
  * JavassistCompiler. (SPI, Singleton, ThreadSafe)
+ * Javassist是一款字节码编译工具，同时也是一个类库，他可以直接检查、修改和创建java类
  */
 public class JavassistCompiler extends AbstractCompiler {
 
